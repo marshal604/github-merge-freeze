@@ -23,10 +23,10 @@ jobs:
         run: |
           # 取得 PR labels
           labels=$(gh pr view ${{ github.event.pull_request.number }} --json labels --jq '.labels[].name')
-          found=0
+          found='0'
           for label in $labels; do
             if [[ "$label" == "merge-freeze" ]]; then
-              found=1
+              found='1'
             fi
           done
           echo "merge_freeze=$found" >> $GITHUB_OUTPUT
