@@ -22,7 +22,7 @@ jobs:
 
       - name: Manage merge-freeze label on all open PRs (only for non-release head branch & base main, and only when current head is release/*)
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT_TOKEN }}
           HEAD_BRANCH: ${{ github.head_ref }}
         run: |
           # 只在當前 head branch 是 release 開頭時才執行
