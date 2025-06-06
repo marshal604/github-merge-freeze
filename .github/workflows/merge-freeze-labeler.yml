@@ -20,31 +20,34 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Manage merge-freeze label on all open PRs (only for release/* head branch)
+      - name: Manage merge-freeze label on all open PRs (only for non-release head branch & base main, and only when current head is release/*)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HEAD_BRANCH: ${{ github.head_ref }}
         run: |
-          # 判斷 head branch 是否以 release 開頭
+          # 只在當前 head branch 是 release 開頭時才執行
           if [[ "$HEAD_BRANCH" == release* ]]; then
-            echo "This is a release branch: $HEAD_BRANCH"
-            # 取得所有 open PR
-            prs=$(gh pr list --state open --json number --jq '.[] | .number')
+            # 取得所有 open PR 的 number、head branch、base branch
+            prs=$(gh pr list --state open --json number,headRefName,baseRefName --jq '.[] | [.number, .headRefName, .baseRefName] | @tsv')
 
             # 判斷事件型態
             if [[ "${{ github.event.action }}" == "opened" || "${{ github.event.action }}" == "reopened" || "${{ github.event.action }}" == "synchronize" ]]; then
-              # PR open/reopen/sync 時，加上 merge-freeze label
-              for pr in $prs; do
-                gh pr edit $pr --add-label merge-freeze || true
-              done
+              # PR open/reopen/sync 時，加上 merge-freeze label（只對 head branch 不是 release 開頭且 base branch 是 main 的 PR）
+              while IFS=$'\t' read -r pr_num pr_branch pr_base; do
+                if [[ "$pr_branch" != release* && "$pr_base" == "main" ]]; then
+                  gh pr edit "$pr_num" --add-label merge-freeze || true
+                fi
+              done <<< "$prs"
             elif [[ "${{ github.event.action }}" == "closed" ]]; then
-              # PR close/merge 時，移除 merge-freeze label
-              for pr in $prs; do
-                gh pr edit $pr --remove-label merge-freeze || true
-              done
+              # PR close/merge 時，移除 merge-freeze label（只對 head branch 不是 release 開頭且 base branch 是 main 的 PR）
+              while IFS=$'\t' read -r pr_num pr_branch pr_base; do
+                if [[ "$pr_branch" != release* && "$pr_base" == "main" ]]; then
+                  gh pr edit "$pr_num" --remove-label merge-freeze || true
+                fi
+              done <<< "$prs"
             fi
           else
-            echo "Not a release branch, skipping."
+            echo "Current head branch is not release*, skipping."
             exit 0
           fi
-        # 註解：只有 head branch 以 release 開頭時才會執行 label 操作
+        # 註解：只有當前 head branch 是 release 開頭時才會執行，且只對 head branch 不是 release 開頭且 base branch 是 main 的 PR 加/移 label
