@@ -1,0 +1,47 @@
+name: Merge Freeze Labeler
+
+on:
+  pull_request:
+    types: [opened, closed, reopened, synchronize]
+    # 不加 branches，所有 PR 都會觸發
+
+jobs:
+  update-merge-freeze-label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Manage merge-freeze label on all open PRs (only for release/* head branch)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_BRANCH: ${{ github.head_ref }}
+        run: |
+          # 判斷 head branch 是否以 release 開頭
+          if [[ "$HEAD_BRANCH" == release* ]]; then
+            echo "This is a release branch: $HEAD_BRANCH"
+            # 取得所有 open PR
+            prs=$(gh pr list --state open --json number --jq '.[] | .number')
+
+            # 判斷事件型態
+            if [[ "${{ github.event.action }}" == "opened" || "${{ github.event.action }}" == "reopened" || "${{ github.event.action }}" == "synchronize" ]]; then
+              # PR open/reopen/sync 時，加上 merge-freeze label
+              for pr in $prs; do
+                gh pr edit $pr --add-label merge-freeze || true
+              done
+            elif [[ "${{ github.event.action }}" == "closed" ]]; then
+              # PR close/merge 時，移除 merge-freeze label
+              for pr in $prs; do
+                gh pr edit $pr --remove-label merge-freeze || true
+              done
+            fi
+          else
+            echo "Not a release branch, skipping."
+            exit 0
+          fi
+        # 註解：只有 head branch 以 release 開頭時才會執行 label 操作
