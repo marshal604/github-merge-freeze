@@ -1,0 +1,32 @@
+name: Merge Freeze Blocker
+
+on:
+  pull_request:
+    types: [labeled, unlabeled, synchronize]
+
+jobs:
+  block-merge-if-merge-freeze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for merge-freeze label
+        id: check_label
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 取得 PR labels
+          labels=$(gh pr view ${{ github.event.pull_request.number }} --json labels --jq '.labels[].name')
+          found=0
+          for label in $labels; do
+            if [[ "$label" == "merge-freeze" ]]; then
+              found=1
+            fi
+          done
+          echo "merge_freeze=$found" >> $GITHUB_OUTPUT
+        # 註解：這段腳本會檢查 PR 是否有 merge-freeze label
+
+      - name: Fail if merge-freeze label exists
+        if: steps.check_label.outputs.merge_freeze == '1'
+        run: |
+          echo 'PR is under merge freeze. Please remove the merge-freeze label before merging.'
+          exit 1
+        # 註解：有 merge-freeze label 時，讓 PR status failed，阻止 merge
