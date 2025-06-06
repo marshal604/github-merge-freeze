@@ -1,9 +1,12 @@
 name: Merge Freeze Labeler
 
+permissions:
+  pull-requests: write
+  issues: write
+
 on:
   pull_request:
     types: [opened, closed, reopened, synchronize]
-    # 不加 branches，所有 PR 都會觸發
 
 jobs:
   update-merge-freeze-label:
