@@ -20,7 +20,7 @@ jobs:
         id: check_label
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           # 取得 PR labels
           labels=$(gh pr view $PR_NUMBER --json labels --jq '.labels[].name')
