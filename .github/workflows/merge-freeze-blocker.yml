@@ -3,12 +3,9 @@ name: Merge Freeze Blocker
 on:
   pull_request:
     types: [labeled, unlabeled, synchronize]
-  issues:
-    types: [labeled, unlabeled]
 
 jobs:
   block-merge-if-merge-freeze:
-    if: github.event.issue.pull_request != null || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -22,7 +19,7 @@ jobs:
       - name: Check for merge-freeze label
         id: check_label
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
         run: |
           # 取得 PR labels
