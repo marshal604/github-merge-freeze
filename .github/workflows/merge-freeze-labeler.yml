@@ -25,6 +25,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_PAT_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_BASE: ${{ github.event.pull_request.base.ref }}
+          HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
           # Only handle PRs with base branch as main and head branch not starting with release
           if [[ "$PR_BASE" == "main" && ! "$HEAD_BRANCH" =~ ^release ]]; then
@@ -42,7 +43,7 @@ jobs:
       - name: Manage merge-freeze label on all open PRs (only for non-release head branch & base main, and only when current head is release/*)
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT_TOKEN }}
-          HEAD_BRANCH: ${{ github.head_ref }}
+          HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
           # 只在當前 head branch 是 release 開頭時才執行
           if [[ "$HEAD_BRANCH" == release* ]]; then
