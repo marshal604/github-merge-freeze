@@ -20,6 +20,25 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Manage merge-freeze label for current PR if base is main (add/remove based on open release PRs)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BASE: ${{ github.event.pull_request.base.ref }}
+        run: |
+          # Only handle PRs with base branch as main and head branch not starting with release
+          if [[ "$PR_BASE" == "main" && ! "$HEAD_BRANCH" =~ ^release ]]; then
+            # Check if there are any open release/* PRs
+            release_prs=$(gh pr list --state open --json headRefName --jq '.[] | select(.headRefName | startswith("release"))')
+            if [[ -n "$release_prs" ]]; then
+              # If there are open release PRs, add merge-freeze label
+              gh pr edit "$PR_NUMBER" --add-label merge-freeze || true
+            else
+              # If there are no open release PRs, remove merge-freeze label
+              gh pr edit "$PR_NUMBER" --remove-label merge-freeze || true
+            fi
+          fi
+
       - name: Manage merge-freeze label on all open PRs (only for non-release head branch & base main, and only when current head is release/*)
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT_TOKEN }}
