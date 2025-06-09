@@ -33,6 +33,8 @@ Automatically manage the `merge-freeze` label: when a release is in progress, al
   When the release PR is closed (merged or closed), the label is removed from those PRs, allowing merges again.
 - 這個流程只會在操作的 PR head branch 是 release 開頭時執行，不影響其他狀況。  
   This workflow only acts when the PR head branch starts with `release/` and does not affect other cases.
+- 額外狀況： 當其他 non-release PR 有內容更新時，會去確認當前 PRs 有沒有 open 的 release PR，有的話就加上 `merge-freeze` 標籤，沒有的話就移除。  
+  When other non-release PRs are updated, it checks if there are any open release PRs. If there are, it adds the `merge-freeze` label; if not, it removes the label.
 
 ---
 
