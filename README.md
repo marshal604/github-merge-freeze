@@ -1,3 +1,5 @@
+前情提要可參考：[如何用 GitHub Workflow 實現自動 Freeze Main Branch](https://blog.hubertyang.com/post/auto-freeze-branch-via-github-workflow/)
+
 # 1️⃣ Merge Freeze Blocker
 
 **用途 / Purpose：**  
